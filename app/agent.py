@@ -265,10 +265,22 @@ def generate_product_card(
     if card is None:
         raise RuntimeError(f"Не удалось получить карточку товара: {last_error}")
 
-    # 4. Синхронизируем детерминированные пропуски с замечаниями модели
-    combined_missing = set(card.missing_or_unclear_fields or [])
+    # 4. Умная дедупликация замечаний модели и детерминированного валидатора
+    seen_keys = set()
+    cleaned_missing: list[str] = []
+
+    for item in (card.missing_or_unclear_fields or []):
+        norm_key = item.lower().replace("отсутствует характеристика:", "").strip()
+        if norm_key not in seen_keys:
+            seen_keys.add(norm_key)
+            cleaned_missing.append(item)
+
     for m in missing_deterministic:
-        combined_missing.add(f"Отсутствует характеристика: {m}")
-    card.missing_or_unclear_fields = sorted(list(combined_missing))
+        norm_m = m.lower().strip()
+        if not any(norm_m in key or key in norm_m for key in seen_keys):
+            seen_keys.add(norm_m)
+            cleaned_missing.append(f"Отсутствует характеристика: {m}")
+
+    card.missing_or_unclear_fields = sorted(cleaned_missing)
 
     return card
