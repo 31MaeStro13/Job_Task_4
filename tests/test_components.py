@@ -22,6 +22,17 @@ def test_product_input_empty_name_fails():
         ProductInput(name="   ", manufacturer="Тест", specs={})
 
 
+def test_product_input_oversized_description_fails():
+    with pytest.raises(ValueError):
+        ProductInput(name="Тест", manufacturer="Тест", description="A" * 5001)
+
+
+def test_product_input_oversized_specs_fails():
+    large_specs = {f"param_{i}": f"val_{i}" for i in range(51)}
+    with pytest.raises(ValueError):
+        ProductInput(name="Тест", manufacturer="Тест", specs=large_specs)
+
+
 def test_find_missing_specs():
     prod = ProductInput(
         name="Манометр DM 02",

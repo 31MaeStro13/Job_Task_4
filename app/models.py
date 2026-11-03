@@ -4,10 +4,10 @@ from pydantic import BaseModel, Field, field_validator
 
 class ProductInput(BaseModel):
     """Схема входных данных о товаре (КИПиА)."""
-    name: str = Field(..., description="Название товара")
-    manufacturer: str = Field(..., description="Производитель")
+    name: str = Field(..., max_length=200, description="Название товара")
+    manufacturer: str = Field(..., max_length=150, description="Производитель")
     specs: Dict[str, Any] = Field(default_factory=dict, description="Технические характеристики")
-    description: Optional[str] = Field(default="", description="Текстовое описание или фрагмент паспорта")
+    description: Optional[str] = Field(default="", max_length=5000, description="Текстовое описание или фрагмент паспорта")
 
     @field_validator("name", "manufacturer")
     @classmethod
@@ -16,6 +16,13 @@ class ProductInput(BaseModel):
         if not stripped:
             raise ValueError("Поле не может быть пустым")
         return stripped
+
+    @field_validator("specs")
+    @classmethod
+    def check_specs_limit(cls, v: Dict[str, Any]) -> Dict[str, Any]:
+        if len(v) > 50:
+            raise ValueError("Превышен лимит характеристик (максимум 50 параметров)")
+        return v
 
 
 class CommercialBlock(BaseModel):
