@@ -1,5 +1,12 @@
 import json
+import sys
 from pathlib import Path
+
+# Обеспечиваем доступ к модулю app при любом способе запуска Streamlit
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
+
 import streamlit as st
 
 from app.models import ProductInput
