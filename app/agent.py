@@ -199,12 +199,12 @@ def generate_product_card(
     card: Optional[ProductCardOutput] = None
     last_error: Optional[Exception] = None
 
-    # План моделей для попыток (основная -> резервная при 503)
+    # План моделей для попыток (основная -> резервная при 503/429)
     active_provider = (provider or os.getenv("LLM_PROVIDER", "gemini")).lower()
     if active_provider == "gemini":
         primary = os.getenv("GEMINI_MODEL", "gemini-3.5-flash")
         fallback = "gemini-3.5-flash-lite" if primary != "gemini-3.5-flash-lite" else "gemini-3.5-flash"
-        models_plan = [primary, fallback, fallback]
+        models_plan = [primary, fallback, "gemini-2.5-flash", fallback]
     else:
         models_plan = [None, None, None]
 
@@ -222,7 +222,7 @@ def generate_product_card(
                     "API вернуло ошибку в content (попытка %d/%d, модель %s): code=%s status=%s",
                     attempt + 1, len(models_plan), curr_model, code, status
                 )
-                if (code == 503 or status == "UNAVAILABLE") and attempt < len(models_plan) - 1:
+                if (code in (503, 429) or status in ("UNAVAILABLE", "RESOURCE_EXHAUSTED")) and attempt < len(models_plan) - 1:
                     delay = min(_RETRY_DELAY * (2 ** attempt), _RETRY_DELAY_MAX)
                     time.sleep(delay)
                     continue
@@ -256,7 +256,8 @@ def generate_product_card(
         except Exception as exc:
             logger.exception("Ошибка вызова LLM (попытка %d/%d, модель %s): %s", attempt + 1, len(models_plan), curr_model, exc)
             last_error = exc
-            if attempt < len(models_plan) - 1 and ("503" in str(exc) or "UNAVAILABLE" in str(exc)):
+            err_str = str(exc).upper()
+            if attempt < len(models_plan) - 1 and any(e in err_str for e in ("503", "429", "UNAVAILABLE", "RESOURCE_EXHAUSTED", "QUOTA")):
                 delay = min(_RETRY_DELAY * (2 ** attempt), _RETRY_DELAY_MAX)
                 time.sleep(delay)
                 continue
