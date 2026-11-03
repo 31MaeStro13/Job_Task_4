@@ -1,0 +1,26 @@
+[project]
+name = "job-task-4"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "Oleg Irshko", email = "irshko@sfedu.ru" }
+]
+requires-python = ">=3.12"
+dependencies = [
+    "agno>=3.1.12",
+    "google-genai>=2.34.0",
+    "httpx[socks]>=0.28.1",
+    "openai>=3.42.1",
+    "pydantic>=2.14.2",
+    "pytest>=9.2.0",
+    "python-dotenv>=1.2.4",
+    "streamlit>=1.66.1",
+]
+
+[project.scripts]
+job-task-4 = "job_task_4:main"
+
+[build-system]
+requires = ["uv_build>=0.12.1,<0.13.0"]
+build-backend = "uv_build"
