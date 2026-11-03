@@ -717,7 +717,7 @@ wheels = [
 [[package]]
 name = "job-task-4"
 version = "0.1.0"
-source = { editable = "." }
+source = { virtual = "." }
 dependencies = [
     { name = "agno" },
     { name = "google-genai" },
